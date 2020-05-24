@@ -35,7 +35,7 @@ parser.add_argument('--batch_size', type=int, default=20, metavar='G',
                     help='Every how many episodes to da a param update')
 parser.add_argument('--seed', type=int, default=87, metavar='N',
                     help='random seed (default: 87)')
-parser.add_argument('--test', action='store_false',
+parser.add_argument('--test', action='store_true',
         help='whether to test the trained model or keep training')
 
 args = parser.parse_args()
@@ -122,8 +122,8 @@ def finish_episode():
         advantage = reward - state_value
         policy_loss.append(-log_prob * advantage)      # policy gradient
         value_loss.append(F.smooth_l1_loss(state_value, reward))  # value function approximation
-    policy_loss = torch.cat(policy_loss).sum()
-    value_loss = torch.cat(value_loss).sum()
+    policy_loss = torch.stack(policy_loss).sum()
+    value_loss = torch.stack(value_loss).sum()
     loss = policy_loss + value_loss
     optimizer.zero_grad()
     if is_cuda:
