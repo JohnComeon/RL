@@ -1,4 +1,4 @@
-# ppo 算法实现，针对
+# ppo 算法实现，针对cartpole
 # 2020.05.31
 
 import gym
@@ -67,12 +67,12 @@ class PPO(nn.Module):
         for i in range(epochs):
             td_target = r + gamma * self.v(next_s) * done_mask
             delta = td_target - self.v(s)   # TD_error
-            delta = delta.detach().numpy()         # 切断反向传播
+            delta = delta.detach().numpy()         # 不计算梯度
 
             advantage_lst = []
             advantage = 0.0
             for delta_t in delta[::-1]:
-                advantage = gamma * lmbda * advantage + delta_t[0]
+                advantage = gamma * lmbda * advantage + delta_t[0]   # gae
                 advantage_lst.append(advantage)
             advantage_lst.reverse()
             advantage = torch.tensor(advantage_lst, dtype=torch.float)
