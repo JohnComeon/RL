@@ -19,6 +19,7 @@ UPDATE_EVERY = 4        # how often to update the network
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 
+
 # 经验回放
 class ReplayBuffer:
     """Fixed-size buffer to store experience tuples."""
@@ -65,7 +66,7 @@ class Agent():
         self.seed = random.seed(seed)
 
         # Q-Network
-        self.qnetwork_local = QNetwork(state_size, action_size,seed).to(device)   # behavior network
+        self.qnetwork_local = QNetwork(state_size, action_size, seed).to(device)   # behavior network
         self.qnetwork_target = QNetwork(state_size, action_size, seed).to(device)  # target network
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=LR)
 
@@ -81,8 +82,7 @@ class Agent():
         if self.t_step == 0:
             if len(self.memory) > BATCH_SIZE:   # If enough samples are available in memory, get random subset and learn
                 experiences = self.memory.sample()
-                self.learn(experiences, GAMMA)
-
+                self.learn(experiences, GAMMA)     # 更新网络
 
     def act(self, state, eps=0.):
         """Returns actions for given state as per current policy.
@@ -94,7 +94,7 @@ class Agent():
         state = torch.from_numpy(state).float().unsqueeze(0).to(device)
         self.qnetwork_local.eval()
         with torch.no_grad():
-            action_values =self.qnetwork_local(state)
+            action_values = self.qnetwork_local(state)
         self.qnetwork_local.train()
 
         # Epsilon-greedy action selection
@@ -102,7 +102,6 @@ class Agent():
             return np.argmax(action_values.cpu().data.numpy())
         else:
             return random.choice(np.arange(self.action_size))
-
 
     def soft_update(self, local_model, target_model, tau):
         """Soft update model parameters.
@@ -116,8 +115,6 @@ class Agent():
         for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
             target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
 
-
-
     def learn(self, experiences, gamma):
         """Update value parameters using given batch of experience tuples.
                 Params
@@ -129,10 +126,12 @@ class Agent():
 
         Q_targets_next = self.qnetwork_target(next_states).detach().max(1)[0].unsqueeze(1)
         # Get max predicted Q values (for next states) from target model
+        # 在Double DQN中，Q_targets_next变成了self.qnetwork_local(next_states).detach().max(1)[0].unsqueeze(1)
 
         Q_targets = rewards + (gamma * Q_targets_next * (1-dones))
         #print(self.qnetwork_local(states).shape)
-        Q_expected = self.qnetwork_local(states).gather(1, actions)   # 固定行号，确认行号
+
+        Q_expected = self.qnetwork_local(states).gather(1, actions)   # 固定行号，确认行号；找到使得Q最大的action
 
         # 计算 loss
         loss = F.mse_loss(Q_expected, Q_targets)
@@ -142,6 +141,5 @@ class Agent():
 
         # ------------------- update target network ------------------- #
         self.soft_update(self.qnetwork_local, self.qnetwork_target, TAU)
-
 
 
