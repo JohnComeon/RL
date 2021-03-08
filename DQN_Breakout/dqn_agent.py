@@ -131,7 +131,7 @@ class Agent():
         Q_targets = rewards + (gamma * Q_targets_next * (1-dones))
         #print(self.qnetwork_local(states).shape)
 
-        Q_expected = self.qnetwork_local(states).gather(1, actions)   # 固定行号，确认行号；找到使得Q最大的action
+        Q_expected = self.qnetwork_local(states).gather(1, actions)   # 固定行号，确认列号；找到使得Q最大的action
 
         # 计算 loss
         loss = F.mse_loss(Q_expected, Q_targets)
