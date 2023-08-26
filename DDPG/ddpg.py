@@ -88,7 +88,7 @@ class Actor(nn.Module):
     def forward(self, x):
         x = F.relu(self.f1(x))
         x = F.relu(self.f2(x))
-        x = self.max_action * torch.tanh(self.f3(x))
+        x = self.max_action * torch.tanh(self.f3(x))  # 使得动作输出在允许的范围内
         return x
 
 
